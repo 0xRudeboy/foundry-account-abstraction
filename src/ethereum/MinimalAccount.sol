@@ -18,15 +18,15 @@ contract MinimalAccount is IAccount, Ownable {
     error MinimalAccount__NotFromEntryPointOrOwner();
     error MinimalAccount__CallFailed(bytes);
 
-    // ================================================================
-    // │                       STATE VARIABLES                        │
-    // ================================================================
+    /*//////////////////////////////////////////////////////////////
+                            STATE VARIABLES
+    //////////////////////////////////////////////////////////////*/
 
     IEntryPoint private immutable i_entryPoint;
 
-    // ================================================================
-    // │                         MODIFIERS                            │
-    // ================================================================
+    /*//////////////////////////////////////////////////////////////
+                               MODIFIERS
+    //////////////////////////////////////////////////////////////*/
     modifier requireFromEntryPoint() {
         if (msg.sender != address(i_entryPoint)) {
             revert MinimalAccount__NotFromEntryPoint();
@@ -41,16 +41,16 @@ contract MinimalAccount is IAccount, Ownable {
         _;
     }
 
-    // ================================================================
-    // │                        CONSTRUCTOR                           │
-    // ================================================================
+    /*//////////////////////////////////////////////////////////////
+                              CONSTRUCTOR
+    //////////////////////////////////////////////////////////////*/
     constructor(address entryPoint) Ownable(msg.sender) {
         i_entryPoint = IEntryPoint(entryPoint);
     }
 
-    // ================================================================
-    // │                      EXTERNAL FUNCTIONS                      │
-    // ================================================================
+    /*//////////////////////////////////////////////////////////////
+                           EXTERNAL FUNCTIONS
+    //////////////////////////////////////////////////////////////*/
     function execute(address dest, uint256 value, bytes calldata functionData) external requireFromEntryPointOrOwner {
         (bool success, bytes memory result) = dest.call{value: value}(functionData);
 
@@ -72,9 +72,9 @@ contract MinimalAccount is IAccount, Ownable {
         _payPrefund(missingAccountFunds);
     }
 
-    // ================================================================
-    // │                      INTERNAL FUNCTIONS                      │
-    // ================================================================
+    /*//////////////////////////////////////////////////////////////
+                           INTERNAL FUNCTIONS
+    //////////////////////////////////////////////////////////////*/
     // EIP-191 version of the signed hash
     // Here essentially we could add any logic as long as we return SIG_VALIDATION_SUCCESS or SIG_VALIDATION_FAILED for a valid or invalid signature respectively
     function _validateSignature(PackedUserOperation calldata userOp, bytes32 userOpHash)
@@ -100,9 +100,9 @@ contract MinimalAccount is IAccount, Ownable {
         }
     }
 
-    // ================================================================
-    // │                           GETTERS                            │
-    // ================================================================
+    /*//////////////////////////////////////////////////////////////
+                                GETTERS
+    //////////////////////////////////////////////////////////////*/
     function getEntryPoint() external view returns (address) {
         return address(i_entryPoint);
     }
