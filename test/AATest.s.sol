@@ -9,7 +9,7 @@ contract AATest is Test {
     MinimalAccount public account;
 
     function setUp() public {
-        account = new MinimalAccount();
+        // account = new MinimalAccount();
     }
 
     function test_consoleLog() public pure {
