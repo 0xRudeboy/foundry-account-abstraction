@@ -8,27 +8,30 @@ import {IEntryPoint} from "lib/account-abstraction/contracts/interfaces/IEntryPo
 import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import {MinimalAccount} from "src/ethereum/MinimalAccount.sol";
+import {DevOpsTools} from "lib/foundry-devops/src/DevOpsTools.sol";
 
 contract SendPackedUserOp is Script {
     using MessageHashUtils for bytes32;
+
+    // Make sure you trust this user - don't run this on Mainnet!
+    address constant RANDOM_APPROVER = 0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45;
 
     function run() public {
         HelperConfig helperConfig = new HelperConfig();
 
         // hard coded the previously deployed minimal account address
-        address depoloyedMinimalAccount = 0xB5ad3b6230cE3F7963C1033A337b8507E8006B9f;
+        // address depoloyedMinimalAccount = 0xB5ad3b6230cE3F7963C1033A337b8507E8006B9f;
 
         address dest = helperConfig.getConfig().usdc; // Arbitrum mainnet USDC address
         uint256 value = 0;
+        address minimalAccountAddress = DevOpsTools.get_most_recent_deployment("MinimalAccount", block.chainid);
 
-        // Testing on Arbitrum mainnet to approve USDC
-        address arbUniswapRouter = 0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45;
-        bytes memory functionData = abi.encodeWithSelector(IERC20.approve.selector, arbUniswapRouter, 1e18);
+        bytes memory functionData = abi.encodeWithSelector(IERC20.approve.selector, RANDOM_APPROVER, 1e18);
         bytes memory executeCalldata =
             abi.encodeWithSelector(MinimalAccount.execute.selector, dest, value, functionData);
 
         PackedUserOperation memory userOp =
-            generateSignedUserOperation(executeCalldata, helperConfig.getConfig(), address(depoloyedMinimalAccount));
+            generateSignedUserOperation(executeCalldata, helperConfig.getConfig(), address(minimalAccountAddress));
 
         PackedUserOperation[] memory ops = new PackedUserOperation[](1);
         ops[0] = userOp;
