@@ -7,7 +7,7 @@ import {HelperConfig} from "./HelperConfig.s.sol";
 
 contract DeployMinimal is Script {
     function run() public {
-        // address entryPoint = getSepoliaEthConfig();
+        deployMinimalAccount();
     }
 
     function deployMinimalAccount() public returns (HelperConfig, MinimalAccount) {
