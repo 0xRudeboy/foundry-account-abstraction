@@ -76,6 +76,8 @@ contract ZkMinimalAccount is IAccount, Ownable {
     /*//////////////////////////////////////////////////////////////
                            EXTERNAL FUNCTIONS
     //////////////////////////////////////////////////////////////*/
+    receive() external payable {}
+
     /**
      * @notice Increase the nonce
      * @notice Validate the transaction (check the owner signed the transaction)
@@ -89,6 +91,41 @@ contract ZkMinimalAccount is IAccount, Ownable {
         requireFromBootLoader
         returns (bytes4 magic)
     {
+        return _validateTransaction(_transaction);
+    }
+
+    function executeTransaction(bytes32, /*_txHash*/ bytes32, /*_suggestedSignedHash*/ Transaction memory _transaction)
+        external
+        payable
+        requireFromBootLoaderOrOwner
+    {
+        _executeTransaction(_transaction);
+    }
+
+    function executeTransactionFromOutside(Transaction memory _transaction) external payable {
+        _validateTransaction(_transaction);
+        _executeTransaction(_transaction);
+    }
+
+    function payForTransaction(bytes32, /*_txHash*/ bytes32, /*_suggestedSignedHash*/ Transaction memory _transaction)
+        external
+        payable
+    {
+        bool success = _transaction.payToTheBootloader();
+        if (!success) {
+            revert ZkMinimalAccount__FailedToPay();
+        }
+    }
+
+    function prepareForPaymaster(bytes32 _txHash, bytes32 _possibleSignedHash, Transaction memory _transaction)
+        external
+        payable
+    {}
+
+    /*//////////////////////////////////////////////////////////////
+                           INTERNAL FUNCTIONS
+    //////////////////////////////////////////////////////////////*/
+    function _validateTransaction(Transaction memory _transaction) internal returns (bytes4 magic) {
         // Because we're using a system contract be sure to compile with --system-mode=true
         // Call nonceholder
         // Increment nonce
@@ -116,16 +153,11 @@ contract ZkMinimalAccount is IAccount, Ownable {
         } else {
             magic = bytes4(0);
         }
-        return magic;
 
-        // return the magic number
+        return magic;
     }
 
-    function executeTransaction(bytes32, /*_txHash*/ bytes32, /*_suggestedSignedHash*/ Transaction memory _transaction)
-        external
-        payable
-        requireFromBootLoaderOrOwner
-    {
+    function _executeTransaction(Transaction memory _transaction) internal {
         address to = address(uint160(_transaction.to));
         uint128 value = Utils.safeCastToU128(_transaction.value);
         bytes memory data = _transaction.data;
@@ -147,24 +179,4 @@ contract ZkMinimalAccount is IAccount, Ownable {
             }
         }
     }
-
-    function executeTransactionFromOutside(Transaction memory _transaction) external payable {}
-
-    function payForTransaction(bytes32, /*_txHash*/ bytes32, /*_suggestedSignedHash*/ Transaction memory _transaction)
-        external
-        payable
-    {
-        bool success = _transaction.payToTheBootloader();
-        if (!success) {
-            revert ZkMinimalAccount__FailedToPay();
-        }
-    }
-
-    function prepareForPaymaster(bytes32 _txHash, bytes32 _possibleSignedHash, Transaction memory _transaction)
-        external
-        payable
-    {}
-    /*//////////////////////////////////////////////////////////////
-                           INTERNAL FUNCTIONS
-    //////////////////////////////////////////////////////////////*/
 }
